@@ -13,11 +13,9 @@ uploaded_file = st.file_uploader("Upload the Excel file (.xlsx) with a sheet nam
 
 if uploaded_file is not None:
     try:
-        # Load workbook and required sheet
         xls = pd.ExcelFile(uploaded_file)
         df = pd.read_excel(xls, sheet_name="EffFrontInputs", header=None)
 
-        # Read number of assets
         n = int(df.iloc[1, 1])
         if n > 100:
             st.error("The number of assets (n) exceeds the maximum allowed value of 100.")
@@ -101,9 +99,12 @@ if uploaded_file is not None:
         st.write(f"Sharpe Ratio: {optimal_sharpe:.2f}")
 
         st.subheader("Sector Mix at Selected Volatility Levels")
-        sampled_vols = np.linspace(filtered_df["Volatility"].min(), filtered_df["Volatility"].max(), 5)
-        sector_mix_table = pd.DataFrame()
 
+        sampled_vols = np.linspace(filtered_df["Volatility"].min(), filtered_df["Volatility"].max(), 20)
+        if optimal_volatility not in sampled_vols:
+            sampled_vols = np.sort(np.append(sampled_vols, optimal_volatility))
+
+        sector_mix_table = pd.DataFrame()
         for v in sampled_vols:
             closest_idx = (filtered_df["Volatility"] - v).abs().idxmin()
             row_data = {
